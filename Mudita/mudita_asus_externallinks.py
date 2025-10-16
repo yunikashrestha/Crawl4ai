@@ -3,7 +3,7 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig,CacheMode
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 async def scrape_all_asus_laptops():
-    brow_config = BrowserConfig(headless=False)  # Change to True for headless mode
+    brow_config = BrowserConfig(headless=True)  # Change to True for headless mode
 
     config_run = CrawlerRunConfig(
         word_count_threshold=50,
@@ -15,15 +15,15 @@ async def scrape_all_asus_laptops():
         cache_mode=CacheMode.DISABLED,
         method="GET",
         check_robots_txt=False,
-        delay_before_return_html=5.0,
-        mean_delay=2.0,
-        max_range=6.0,
-        semaphore_count=3,
+        delay_before_return_html=8.0,
+        mean_delay=3.0,
+        max_range=8.0,
+        semaphore_count=5,
 
         # JavaScript: keep clicking "Show 20 more products" until it disappears
         js_code="""
         async function clickShowMore() {
-            for (let i = 0; i < 10; i++) {  // Try up to 10 times
+            for (let i = 0; i < 50; i++) {  // Try up to 10 times
                 let btn = document.querySelector('button.action.primary.mst-scroll__button._next');
                 if (!btn) {
                     console.log("No more 'Show more' button found after " + i + " clicks.");
@@ -66,18 +66,19 @@ async def scrape_all_asus_laptops():
         if results.success:
             print("Page fetched successfully. Extracting product URLs...")
 
-            product_urls = set()
+            product_urls = []
             for result in results:
                 for link in result.links["internal"]:
                     href = link.get("href")
-                    if href and "/asus-" in href:  # filter to keep only Asus product pages
-                        product_urls.add(href)
+                    product_urls.append(href)
 
             # Save results
             output_file = "links.txt"
-            with open(output_file, "w", encoding="utf-8") as f:
-                for url in sorted(product_urls):
-                    f.write(url + "\n")
+            # with open("output_file",'a',encoding = "utf-8") as f:
+            #  f.write(product_urls+"\n")
+            with open(output_file,"w") as f:
+                for item in product_urls:
+                    f.write(item+'\n')
 
             print(f"Saved {len(product_urls)} product URLs to '{output_file}'")
         else:
