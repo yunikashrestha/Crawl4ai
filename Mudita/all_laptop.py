@@ -2,7 +2,7 @@ import asyncio
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
-async def scrape_product_urls():
+async def scrape_laptop_urls():
     brow_config = BrowserConfig(headless=False)
 
     config_run = CrawlerRunConfig(
@@ -58,38 +58,29 @@ async def scrape_product_urls():
     )
 
     async with AsyncWebCrawler(config=brow_config) as crawler:
-        all_links = set()  
-        product_array=[698,697,699,696,695,727]# to avoid duplicates
+        # Crawl the page
+        results = await crawler.arun(
+            url="https://mudita.com.np/laptops-nepal.html",
+            config=config_run
+        )
 
-        # LOOP through multiple pages
-        for page_num in range(0, 6):  
-            url = f"https://mudita.com.np/laptops-nepal/by-brand/asus.html?laptop_series={product_array[page_num]}"
-            print(f"\n[CRAWLING PAGE {page_num}] {url}")
-
-            results = await crawler.arun(url=url, config=config_run)
-
-            if results.success:
-                internal_links = []
-                for result in results:
-                    for link in result.links["internal"]:
-                        product_url = link.get("href")
-                        if product_url and product_url not in all_links:
-                            all_links.add(product_url)
-                            internal_links.append(product_url)
-
-                print(f"Found {len(internal_links)} product URLs on page {page_num}")
-                
-                # Save
-                with open(f"mudita_asus_laptop{product_array[page_num]}.txt", "a", encoding="utf-8") as f:
-                    for link in internal_links:
-                        f.write(link + "\n")
-            else:
-                print(f"Failed to crawl page {page_num}")
-
-        print(f"\nTotal unique product URLs collected: {len(all_links)}")
+        if results.success:
+            #extracting all the internal links
+            internal_links = []
+            for result in results:
+                for link in result.links["internal"]:
+                    print(link)
+                    url = link.get("href")
+                    print(url)
+                    internal_links.append(url+ "\n")
+                    with open("mudita_all_laptop_links.txt",'a',encoding = "utf-8") as f:
+                        f.write(url+"\n")
 
 async def main():
-    await scrape_product_urls()
+    await scrape_laptop_urls()
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 if __name__ == "__main__":
     asyncio.run(main())
